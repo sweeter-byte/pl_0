@@ -1,0 +1,10 @@
+program condition;
+var x, result;
+begin
+    read(x);
+    if x > 0 then
+        result := 1
+    else
+        result := 0;
+    write(result)
+end

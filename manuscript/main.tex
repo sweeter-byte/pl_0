@@ -1,0 +1,1611 @@
+% =============================================================================
+% PL/0编译器课程设计报告
+% 南京航空航天大学 计算机科学与技术学院
+% =============================================================================
+
+% 使用 10pt 基础字号，然后通过 fontsize 调整为 10.5pt（五号字体）
+\documentclass[10pt,a4paper,openany]{book}
+
+% =============================================================================
+% 宏包引入
+% =============================================================================
+
+% 设置正文为五号字体（10.5pt）
+\usepackage{type1cm}  % 允许任意字号
+\renewcommand{\normalsize}{\fontsize{10.5pt}{15pt}\selectfont}  % 五号字体，1.5倍行距约15pt
+\normalsize  % 应用设置
+
+% =============================================================================
+% 宏包引入
+% =============================================================================
+
+% =============================================================================
+% 中文支持配置
+% 说明：请使用 XeLaTeX 或 LuaLaTeX 编译本文档
+% 如果在 Overleaf 上编译，请选择 XeLaTeX 编译器
+% =============================================================================
+
+% 方案一：使用 ctex 宏包（推荐，需安装 ctex 宏包）
+% \usepackage[UTF8,scheme=plain]{ctex}
+
+% 方案二：使用 xeCJK 宏包（需安装 xeCJK 宏包）
+% \usepackage{xeCJK}
+% \setCJKmainfont{SimSun}           % Windows: 宋体
+% \setCJKsansfont{SimHei}           % Windows: 黑体
+% \setCJKmonofont{FangSong}         % Windows: 仿宋
+% 或者使用开源字体：
+% \setCJKmainfont{Noto Serif CJK SC}
+% \setCJKsansfont{Noto Sans CJK SC}
+
+% 方案三：使用 CJKutf8（兼容性好，使用 pdfLaTeX 编译）
+% \usepackage{CJKutf8}
+% 需要在 document 环境开始处添加 \begin{CJK}{UTF8}{gbsn}
+
+% 以下为占位配置，请根据您的系统环境选择上述方案之一
+% 取消注释您选择的方案，并注释掉下面这行
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}[
+    BoldFont=Noto Sans CJK SC Bold,
+    ItalicFont=Noto Serif CJK SC,
+]
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+
+% 页面布局
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.8cm,right=2.8cm]{geometry}
+
+% 数学公式
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+
+% 图表
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfigure}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+
+% 代码高亮
+\usepackage{listings}
+\usepackage{xcolor}
+
+% 算法
+\usepackage{algorithm}
+\usepackage{algpseudocode}  % 使用algorithmicx的algpseudocode，支持Procedure和Function
+
+% 超链接
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 参考文献
+% 方案一：使用 biblatex + biber（推荐，需要安装 biber）
+% \usepackage[backend=biber,style=gb7714-2015,sorting=none]{biblatex}
+% \addbibresource{references.bib}
+
+% 方案二：使用 biblatex + bibtex（兼容性更好）
+\usepackage[backend=bibtex,style=numeric,sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% 方案三：使用传统 bibtex（最大兼容性，但需修改文末的 \printbibliography）
+% 文末需使用：
+% \bibliographystyle{plain}
+% \bibliography{references}
+
+% 页眉页脚
+\usepackage{fancyhdr}
+
+% 标题格式
+\usepackage{titlesec}
+\usepackage{titletoc}
+
+% 枚举与列表
+\usepackage{enumitem}
+
+% 附录
+\usepackage[toc,page]{appendix}
+
+% 绘图
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,calc,fit,backgrounds}
+
+% 颜色标注（用于标记需要插入图片的位置）
+\usepackage{soul}
+
+% 脚注
+\usepackage[bottom]{footmisc}
+
+% 目录深度
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% =============================================================================
+% 代码样式设置
+% =============================================================================
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+\definecolor{keywordcolor}{rgb}{0.13,0.13,1}
+\definecolor{stringcolor}{rgb}{0.63,0.13,0.13}
+
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{stringcolor},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=8pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    frameround=tttt,
+    framesep=3pt,
+    xleftmargin=2em,
+    xrightmargin=1em,
+}
+
+\lstdefinestyle{pl0style}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{stringcolor},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=8pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    frameround=tttt,
+    framesep=3pt,
+    xleftmargin=2em,
+    xrightmargin=1em,
+    morekeywords={program,const,var,procedure,begin,end,if,then,else,while,do,call,read,write,odd},
+}
+
+\lstset{style=cppstyle}
+
+% =============================================================================
+% 章节标题格式
+% =============================================================================
+
+% 中文字号参考：
+% 一号 = 26pt, 二号 = 22pt, 小二 = 18pt, 三号 = 16pt, 小三 = 15pt
+% 四号 = 14pt, 小四 = 12pt, 五号 = 10.5pt, 小五 = 9pt
+
+\titleformat{\chapter}[display]
+    {\normalfont\fontsize{16pt}{20pt}\selectfont\bfseries\centering}  % 三号字体
+    {第\,\thechapter\,章}
+    {1em}
+    {}
+
+\titleformat{\section}
+    {\normalfont\fontsize{14pt}{18pt}\selectfont\bfseries}  % 四号字体
+    {\thesection}
+    {1em}
+    {}
+
+\titleformat{\subsection}
+    {\normalfont\fontsize{12pt}{16pt}\selectfont\bfseries}  % 小四字体
+    {\thesubsection}
+    {1em}
+    {}
+
+\titleformat{\subsubsection}
+    {\normalfont\fontsize{10.5pt}{14pt}\selectfont\bfseries}  % 五号字体加粗
+    {\thesubsubsection}
+    {1em}
+    {}
+
+% =============================================================================
+% 页眉页脚设置
+% =============================================================================
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\leftmark}
+\fancyhead[RE]{PL/0编译器课程设计报告}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% 章节首页样式
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+
+% =============================================================================
+% 自定义命令
+% =============================================================================
+
+% 需要插入图片的标记
+\newcommand{\needfigure}[1]{\textcolor{red}{\textbf{【该处需要插入图片：#1】}}}
+
+% 代码文件名
+\newcommand{\filename}[1]{\texttt{#1}}
+
+% 关键词
+\newcommand{\keyword}[1]{\textbf{#1}}
+
+% =============================================================================
+% 文档信息
+% =============================================================================
+
+\title{\textbf{编译原理课程设计报告}\\[0.5em]
+\Large PL/0语言编译器的设计与实现}
+\author{姓名：\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \quad 学号：\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_}
+\date{2025年12月}
+
+% =============================================================================
+% 文档开始
+% =============================================================================
+
+\begin{document}
+
+% =============================================================================
+% 封面
+% =============================================================================
+
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    {\fontsize{22pt}{28pt}\selectfont\bfseries 南京航空航天大学}\\[0.5cm]  % 二号
+    {\fontsize{16pt}{22pt}\selectfont 计算机科学与技术学院}\\[2cm]  % 三号
+    
+    \rule{\textwidth}{1.5pt}\\[0.4cm]
+    {\fontsize{26pt}{34pt}\selectfont\bfseries 编译原理课程设计报告}\\[0.2cm]  % 一号
+    \rule{\textwidth}{1.5pt}\\[1.5cm]
+    
+    {\fontsize{18pt}{24pt}\selectfont\bfseries PL/0语言编译器的设计与实现}\\[3cm]  % 小二
+    
+    \begin{tabular}{rl}
+        \fontsize{14pt}{20pt}\selectfont 专\hspace{2em}业： & \fontsize{14pt}{20pt}\selectfont \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\[0.5cm]
+        \fontsize{14pt}{20pt}\selectfont 学\hspace{2em}号： & \fontsize{14pt}{20pt}\selectfont \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\[0.5cm]
+        \fontsize{14pt}{20pt}\selectfont 姓\hspace{2em}名： & \fontsize{14pt}{20pt}\selectfont \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\[0.5cm]
+        \fontsize{14pt}{20pt}\selectfont 指导教师： & \fontsize{14pt}{20pt}\selectfont \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\[0.5cm]
+    \end{tabular}\\[3cm]
+    
+    \vfill
+    {\fontsize{14pt}{20pt}\selectfont 2025年12月}  % 四号
+\end{titlepage}
+
+% =============================================================================
+% 摘要
+% =============================================================================
+
+\frontmatter
+\chapter*{摘\quad 要}
+\addcontentsline{toc}{chapter}{摘要}
+
+本课程设计实现了一个完整的PL/0语言编译器系统，包括词法分析器、语法分析器、符号表管理、中间代码生成器以及基于栈式虚拟机的解释执行器。
+
+编译器采用C++语言编写，遵循现代软件工程实践，实现了模块化的系统架构。词法分析器采用双缓冲区技术和哨兵机制，有效处理大文件输入；语法分析器基于递归下降方法实现，与代码生成器紧密结合，采用一趟扫描方式完成语法分析和代码生成；符号表采用分层结构设计，支持嵌套作用域的变量和过程声明；解释器实现了完整的栈式虚拟机指令集，支持过程调用、参数传递等高级特性。
+
+系统还实现了类似Clang风格的诊断系统，提供友好的错误报告和源代码定位功能，大大提升了用户体验和调试效率。
+
+通过本课程设计，深入理解了编译原理的核心概念和技术，包括有限自动机、上下文无关文法、递归下降分析、符号表管理、中间代码生成和运行时环境等内容。
+
+\vspace{1cm}
+\noindent\textbf{关键词：}编译器；PL/0语言；词法分析；语法分析；代码生成；栈式虚拟机
+
+% =============================================================================
+% 目录
+% =============================================================================
+
+\tableofcontents
+
+% =============================================================================
+% 正文
+% =============================================================================
+
+\mainmatter
+
+% =============================================================================
+% 第一章：绪论
+% =============================================================================
+
+\chapter{绪论}
+
+\section{课程设计背景与意义}
+
+编译原理是计算机科学与技术专业的核心课程之一，它研究如何将高级程序设计语言翻译成计算机可以执行的机器代码或中间代码\cite{aho2006compilers}。编译器是连接程序员与计算机硬件的重要桥梁，其设计与实现涉及形式语言与自动机理论、数据结构、算法设计等多个领域的知识。
+
+PL/0语言是由Niklaus Wirth教授设计的一种教学用程序设计语言\cite{wirth1976algorithms}，它保留了高级语言的主要特征，如变量声明、常量定义、过程定义、条件语句、循环语句等，同时又足够简单，适合作为编译原理课程的教学实例。通过实现PL/0编译器，可以深入理解编译器的各个组成部分及其工作原理。
+
+\section{课程设计目标}
+
+本课程设计的主要目标包括：
+
+\begin{enumerate}[label=(\arabic*)]
+    \item 深入理解编译原理的基本概念和核心技术；
+    \item 掌握词法分析、语法分析、语义分析和代码生成的基本方法；
+    \item 实现一个完整的PL/0语言编译器系统；
+    \item 培养软件工程实践能力和系统设计能力。
+\end{enumerate}
+
+\section{PL/0语言概述}
+
+\subsection{语言特性}
+
+PL/0语言是PASCAL语言的一个子集，具有以下主要特性：
+
+\begin{itemize}
+    \item 支持整型常量和变量声明
+    \item 支持过程定义和嵌套作用域
+    \item 支持基本的算术运算和关系运算
+    \item 支持条件语句（if-then-else）和循环语句（while-do）
+    \item 支持过程调用
+    \item 支持基本的输入输出操作
+\end{itemize}
+
+\subsection{语法规范}
+
+PL/0语言的语法采用扩展的巴科斯范式（EBNF）描述\cite{iso14977}，其完整的语法规则如下：
+
+\begin{lstlisting}[style=pl0style,caption={PL/0语言EBNF语法规则}]
+<prog>      -> program <id>; <block>
+<block>     -> [<condecl>][<vardecl>][<proc>]<body>
+<condecl>   -> const <const>{,<const>};
+<const>     -> <id> := <integer>
+<vardecl>   -> var <id>{,<id>};
+<proc>      -> procedure <id>([<id>{,<id>}]); <block>{;<proc>}
+<body>      -> begin <statement>{;<statement>} end
+<statement> -> <id> := <exp>
+             | if <lexp> then <statement> [else <statement>]
+             | while <lexp> do <statement>
+             | call <id>([<exp>{,<exp>}])
+             | <body>
+             | read(<id>{,<id>})
+             | write(<exp>{,<exp>})
+<lexp>      -> <exp> <lop> <exp> | odd <exp>
+<exp>       -> [+|-]<term>{<aop><term>}
+<term>      -> <factor>{<mop><factor>}
+<factor>    -> <id> | <integer> | (<exp>)
+<lop>       -> = | <> | < | <= | > | >=
+<aop>       -> + | -
+<mop>       -> * | /
+\end{lstlisting}
+
+\section{开发环境与工具}
+
+本课程设计采用以下开发环境和工具：
+
+\begin{itemize}
+    \item \textbf{编程语言}：C++17标准
+    \item \textbf{编译器}：GCC 11.0+ / Clang 14.0+
+    \item \textbf{构建工具}：Make / CMake
+    \item \textbf{版本控制}：Git
+    \item \textbf{开发环境}：Visual Studio Code / CLion
+    \item \textbf{操作系统}：Linux / macOS / Windows
+\end{itemize}
+
+\section{报告组织结构}
+
+本报告共分为以下几个部分：
+
+\begin{itemize}
+    \item 第一章介绍课程设计的背景、目标和PL/0语言概述；
+    \item 第二章描述系统的总体设计和架构；
+    \item 第三章详细介绍词法分析器的设计与实现；
+    \item 第四章详细介绍语法分析器与代码生成器的设计与实现；
+    \item 第五章介绍符号表的设计与管理；
+    \item 第六章介绍目标代码生成；
+    \item 第七章介绍解释器的设计与实现；
+    \item 第八章介绍诊断系统的设计；
+    \item 第九章进行系统测试与验证；
+    \item 第十章总结课程设计的成果和收获。
+\end{itemize}
+
+% =============================================================================
+% 第二章：系统总体设计
+% =============================================================================
+
+\chapter{系统总体设计}
+
+\section{系统架构}
+
+本编译器系统采用模块化的设计思想，将整个编译过程分解为多个相对独立的功能模块\cite{cooper2011engineering}。系统的整体架构如图\ref{fig:system-arch}所示。
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.85\textwidth]{figures/system-architecture.pdf}
+%     \caption{系统总体架构图}
+%     \label{fig:system-arch}
+% \end{figure}
+
+\needfigure{系统总体架构图，展示源代码到执行结果的完整流程，包括词法分析、语法分析、代码生成、解释执行各模块及其数据流向}
+
+系统主要由以下模块组成：
+
+\begin{enumerate}
+    \item \textbf{词法分析器}（Lexer）：将源程序字符流转换为Token序列；
+    \item \textbf{语法分析器}（Parser）：根据语法规则分析Token序列，构建语法结构；
+    \item \textbf{符号表管理器}（Symbol Table）：管理标识符的声明和引用信息；
+    \item \textbf{代码生成器}（Code Generator）：生成目标虚拟机的中间代码；
+    \item \textbf{诊断系统}（Diagnostics）：提供错误报告和源码定位功能；
+    \item \textbf{解释器}（Interpreter）：执行生成的中间代码。
+\end{enumerate}
+
+\section{编译流程}
+
+编译器采用一趟扫描（One-Pass）的编译方式\cite{陈火旺2000程序设计语言编译原理}，以语法分析为核心驱动整个编译过程。具体流程如下：
+
+\begin{enumerate}
+    \item 语法分析器按需调用词法分析器获取Token；
+    \item 语法分析器根据PL/0文法进行语法检查；
+    \item 语法分析正确时，调用代码生成器生成相应的目标代码；
+    \item 符号表管理器在整个过程中维护标识符信息；
+    \item 诊断系统收集并报告编译过程中的错误和警告。
+\end{enumerate}
+
+\section{模块划分与接口设计}
+
+系统的模块划分遵循高内聚、低耦合的设计原则\cite{stroustrup2013cpp}。各模块的源文件组织如表\ref{tab:module-files}所示。
+
+\begin{table}[H]
+    \centering
+    \caption{模块与源文件对应关系}
+    \label{tab:module-files}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{模块名称} & \textbf{头文件} & \textbf{实现文件} \\
+        \midrule
+        词法分析器 & \filename{lexer.h} & \filename{lexer.cpp} \\
+        语法分析器/代码生成 & \filename{parser\_codegen.h} & \filename{parser\_codegen.cpp} \\
+        符号表/代码生成器 & \filename{codegen.h} & \filename{codegen.cpp} \\
+        诊断系统 & \filename{diagnostics.h} & \filename{diagnostics.cpp} \\
+        解释器 & \filename{interpreter.h} & \filename{interpreter.cpp} \\
+        主程序 & - & \filename{main.cpp} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{数据结构设计}
+
+\subsection{Token结构}
+
+Token是词法分析的输出单元，其数据结构定义如下：
+
+\begin{lstlisting}[language=C++,caption={Token数据结构}]
+struct Token {
+    TokenType type;      // Token类型
+    std::string value;   // Token值
+    int line;            // 行号
+    int column;          // 列号
+    int length;          // Token长度
+};
+\end{lstlisting}
+
+\subsection{指令结构}
+
+中间代码采用三地址形式的指令结构：
+
+\begin{lstlisting}[language=C++,caption={指令数据结构}]
+struct Instruction {
+    OpCode op;      // 操作码
+    int level;      // L段：层差
+    int address;    // A段：地址/操作数
+};
+\end{lstlisting}
+
+\subsection{符号表项}
+
+符号表项存储标识符的属性信息：
+
+\begin{lstlisting}[language=C++,caption={符号表项数据结构}]
+struct Symbol {
+    std::string name;   // 标识符名称
+    SymbolType type;    // 类型（常量/变量/过程）
+    int level;          // 声明层次
+    int address;        // 地址或值
+};
+\end{lstlisting}
+
+% =============================================================================
+% 第三章：词法分析器设计与实现
+% =============================================================================
+
+\chapter{词法分析器设计与实现}
+
+\section{词法分析概述}
+
+词法分析是编译过程的第一个阶段，其主要任务是将源程序的字符序列转换为有意义的词法单元（Token）序列\cite{aho2006compilers}。词法分析器需要识别关键字、标识符、常量、运算符和分隔符等不同类型的词法单元。
+
+\section{词法单元设计}
+
+PL/0语言的词法单元分类如表\ref{tab:token-types}所示。
+
+\begin{table}[H]
+    \centering
+    \caption{PL/0词法单元分类}
+    \label{tab:token-types}
+    \begin{tabular}{lp{8cm}}
+        \toprule
+        \textbf{类别} & \textbf{词法单元} \\
+        \midrule
+        关键字 & \texttt{program}, \texttt{const}, \texttt{var}, \texttt{procedure}, \texttt{begin}, \texttt{end}, \texttt{if}, \texttt{then}, \texttt{else}, \texttt{while}, \texttt{do}, \texttt{call}, \texttt{read}, \texttt{write}, \texttt{odd} \\
+        标识符 & 以字母开头，由字母和数字组成的字符串 \\
+        整数常量 & 由数字组成的字符串 \\
+        运算符 & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, \texttt{:=}, \texttt{=}, \texttt{<>}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=} \\
+        分隔符 & \texttt{(}, \texttt{)}, \texttt{,}, \texttt{;} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{双缓冲区技术}
+
+为了高效处理大文件输入，本系统采用了双缓冲区技术（Double Buffering with Sentinels）\cite{aho1986double}。这种技术使用两个等大的缓冲区交替加载输入数据，并在每个缓冲区末尾放置哨兵字符，从而减少缓冲区边界检查的开销。
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{figures/double-buffer.pdf}
+%     \caption{双缓冲区结构示意图}
+%     \label{fig:double-buffer}
+% \end{figure}
+
+\needfigure{双缓冲区结构示意图，展示两个缓冲区、哨兵位置、lexemeBegin和forward指针的关系}
+
+双缓冲区的内存布局如下：
+
+\begin{lstlisting}[language=C++,caption={双缓冲区内存布局}]
+// 缓冲区布局：
+// +------------------+---+------------------+---+
+// |    Buffer 1      |EOF|    Buffer 2      |EOF|
+// +------------------+---+------------------+---+
+// |<-- BUFFER_SIZE -->|   |<-- BUFFER_SIZE -->|
+
+static const size_t BUFFER_SIZE = 4096;  // 通常等于磁盘块大小
+static const char SENTINEL = '\0';       // 哨兵字符
+\end{lstlisting}
+
+\section{有限自动机设计}
+
+词法分析器的核心是一组有限自动机（DFA），用于识别不同类型的词法单元\cite{hopcroft2006automata}。
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.7\textwidth]{figures/lexer-dfa.pdf}
+%     \caption{标识符识别DFA状态转换图}
+%     \label{fig:lexer-dfa}
+% \end{figure}
+
+\needfigure{标识符和数字识别的DFA状态转换图}
+
+\section{关键实现}
+
+\subsection{标识符与关键字识别}
+
+标识符和关键字的识别采用先读取后查表的方式：
+
+\begin{lstlisting}[language=C++,caption={标识符与关键字识别}]
+Token Lexer::readIdentifierOrKeyword() {
+    buffer.markLexemeStart();
+    int startLine = buffer.getLexemeStartLine();
+    int startCol = buffer.getLexemeStartColumn();
+    
+    // 读取标识符
+    while (std::isalnum(currentChar()) || currentChar() == '_') {
+        advance();
+    }
+    
+    std::string lexeme = buffer.getLexeme();
+    
+    // 检查是否为关键字
+    if (keywords.count(lexeme) > 0) {
+        return Token(keywordType(lexeme), lexeme, startLine, startCol);
+    }
+    return Token(TokenType::IDENTIFIER, lexeme, startLine, startCol);
+}
+\end{lstlisting}
+
+\subsection{数字识别}
+
+\begin{lstlisting}[language=C++,caption={数字识别}]
+Token Lexer::readNumber() {
+    buffer.markLexemeStart();
+    int startLine = buffer.getLexemeStartLine();
+    int startCol = buffer.getLexemeStartColumn();
+    
+    while (std::isdigit(currentChar())) {
+        advance();
+    }
+    
+    // 检查是否有错误的后缀
+    if (std::isalpha(currentChar())) {
+        reportError("invalid suffix on integer constant");
+    }
+    
+    return Token(TokenType::INTEGER, buffer.getLexeme(), startLine, startCol);
+}
+\end{lstlisting}
+
+\section{错误处理}
+
+词法分析器实现了完善的错误处理机制，能够识别并报告非法字符、未闭合字符串等词法错误，同时尽可能继续分析以发现更多错误。
+
+% =============================================================================
+% 第四章：语法分析器与代码生成器
+% =============================================================================
+
+\chapter{语法分析器与代码生成器设计与实现}
+
+\section{语法分析概述}
+
+语法分析是编译过程的核心阶段，其任务是根据语言的文法规则，分析词法单元序列是否构成合法的程序结构\cite{knuth1965translation}。本系统采用自顶向下的递归下降分析方法。
+
+\section{递归下降分析}
+
+递归下降分析是一种直观而有效的语法分析技术，它为文法的每个非终结符编写一个对应的分析函数\cite{appel2004modern}。当分析某个非终结符时，根据当前输入符号选择相应的产生式进行推导。
+
+PL/0语言的文法属于LL(1)文法，可以直接使用递归下降方法进行分析。各非终结符对应的分析函数如表\ref{tab:parse-functions}所示。
+
+\begin{table}[H]
+    \centering
+    \caption{语法分析函数}
+    \label{tab:parse-functions}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{非终结符} & \textbf{分析函数} \\
+        \midrule
+        \texttt{<prog>} & \texttt{parseProgram()} \\
+        \texttt{<block>} & \texttt{parseBlock()} \\
+        \texttt{<condecl>} & \texttt{parseCondecl()} \\
+        \texttt{<vardecl>} & \texttt{parseVardecl()} \\
+        \texttt{<proc>} & \texttt{parseProc()} \\
+        \texttt{<body>} & \texttt{parseBody()} \\
+        \texttt{<statement>} & \texttt{parseStatement()} \\
+        \texttt{<lexp>} & \texttt{parseLexp()} \\
+        \texttt{<exp>} & \texttt{parseExp()} \\
+        \texttt{<term>} & \texttt{parseTerm()} \\
+        \texttt{<factor>} & \texttt{parseFactor()} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{语法制导翻译}
+
+本系统采用语法制导翻译（Syntax-Directed Translation）技术\cite{lewis1976automatic}，将代码生成与语法分析紧密结合。在识别出语法结构的同时，立即生成相应的目标代码。
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.75\textwidth]{figures/syntax-directed.pdf}
+%     \caption{语法制导翻译示意图}
+%     \label{fig:syntax-directed}
+% \end{figure}
+
+\needfigure{语法制导翻译过程示意图，展示语法分析与代码生成的协同工作}
+
+\section{关键语法结构分析}
+
+\subsection{表达式分析}
+
+表达式的分析按照运算符优先级从低到高进行：
+
+\begin{lstlisting}[language=C++,caption={表达式分析}]
+void ParserWithCodegen::parseExp() {
+    // 处理可选的符号
+    bool negative = false;
+    if (check(TokenType::MINUS)) {
+        negative = true;
+        advance();
+    } else if (check(TokenType::PLUS)) {
+        advance();
+    }
+    
+    parseTerm();
+    
+    if (negative) {
+        codeGen.emit(OpCode::OPR, 0, static_cast<int>(OprType::NEG));
+    }
+    
+    // 处理加减运算
+    while (check(TokenType::PLUS) || check(TokenType::MINUS)) {
+        TokenType op = currentToken().type;
+        advance();
+        parseTerm();
+        
+        if (op == TokenType::PLUS) {
+            codeGen.emit(OpCode::OPR, 0, static_cast<int>(OprType::ADD));
+        } else {
+            codeGen.emit(OpCode::OPR, 0, static_cast<int>(OprType::SUB));
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{条件语句分析}
+
+if-then-else语句需要处理条件跳转和回填：
+
+\begin{lstlisting}[language=C++,caption={条件语句分析}]
+void ParserWithCodegen::parseStatement() {
+    if (match(TokenType::IF)) {
+        parseLexp();  // 分析条件表达式
+        expect(TokenType::THEN, "'then'");
+        
+        int jpcAddr = codeGen.emit(OpCode::JPC, 0, 0);  // 条件为假时跳转
+        parseStatement();  // 分析then分支
+        
+        if (match(TokenType::ELSE)) {
+            int jmpAddr = codeGen.emit(OpCode::JMP, 0, 0);  // 跳过else分支
+            codeGen.backpatch(jpcAddr, codeGen.getNextAddress());
+            parseStatement();  // 分析else分支
+            codeGen.backpatch(jmpAddr, codeGen.getNextAddress());
+        } else {
+            codeGen.backpatch(jpcAddr, codeGen.getNextAddress());
+        }
+    }
+    // ... 其他语句类型
+}
+\end{lstlisting}
+
+\section{错误恢复}
+
+语法分析器实现了恐慌模式（Panic Mode）错误恢复策略\cite{burke1987practical}，在发现语法错误后跳过部分输入，直到找到同步点后继续分析，以便发现更多错误。
+
+% =============================================================================
+% 第五章：符号表设计与管理
+% =============================================================================
+
+\chapter{符号表设计与管理}
+
+\section{符号表概述}
+
+符号表是编译器中用于存储标识符属性信息的数据结构\cite{grune2012modern}。它记录了程序中出现的各种名字（变量、常量、过程等）及其属性，是语义分析和代码生成的重要依据。
+
+\section{作用域管理}
+
+PL/0语言支持嵌套的过程定义，因此需要支持多层作用域。本系统采用栈式结构管理作用域：
+
+\begin{lstlisting}[language=C++,caption={作用域管理}]
+class SymbolTable {
+private:
+    std::vector<std::vector<Symbol>> scopes;  // 每层作用域的符号
+    int currentLevel;                          // 当前层次
+    std::vector<int> addressStack;             // 每层的地址计数
+    
+public:
+    void enterScope();   // 进入新作用域
+    void exitScope();    // 退出当前作用域
+    Symbol* lookup(const std::string& name);        // 全局查找
+    Symbol* lookupCurrent(const std::string& name); // 当前作用域查找
+};
+\end{lstlisting}
+
+\section{符号查找策略}
+
+符号查找采用由内向外的策略，首先在当前作用域查找，如果未找到则逐层向外查找，直到全局作用域：
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{figures/symbol-lookup.pdf}
+%     \caption{符号查找过程示意图}
+%     \label{fig:symbol-lookup}
+% \end{figure}
+
+\needfigure{符号查找过程示意图，展示多层作用域的符号查找顺序}
+
+\section{地址分配}
+
+变量地址的分配考虑了活动记录的结构，每层作用域的变量地址从3开始（0-2为连接数据区）：
+
+\begin{lstlisting}[language=C++,caption={地址分配}]
+void SymbolTable::enterScope() {
+    currentLevel++;
+    scopes.push_back(std::vector<Symbol>());
+    addressStack.push_back(3);  // 从3开始，前3个单元为连接数据
+}
+
+int SymbolTable::getNextAddress() {
+    return addressStack[currentLevel]++;
+}
+\end{lstlisting}
+
+% =============================================================================
+% 第六章：目标代码生成
+% =============================================================================
+
+\chapter{目标代码生成}
+
+\section{假想栈式机指令系统}
+
+本系统的目标代码是为一个假想的栈式计算机设计的中间代码\cite{lindholm2014java}。指令格式为三地址形式：
+
+\begin{center}
+    \texttt{F L A}
+\end{center}
+
+其中：
+\begin{itemize}
+    \item F：操作码（Function Code）
+    \item L：层差（Level Difference）
+    \item A：地址/操作数（Address/Operand）
+\end{itemize}
+
+\section{指令集设计}
+
+完整的指令集如表\ref{tab:instruction-set}所示。
+
+\begin{table}[H]
+    \centering
+    \caption{PL/0虚拟机指令集}
+    \label{tab:instruction-set}
+    \begin{tabular}{llp{8cm}}
+        \toprule
+        \textbf{指令} & \textbf{格式} & \textbf{功能说明} \\
+        \midrule
+        LIT & LIT 0, a & 将常量a压入栈顶 \\
+        OPR & OPR 0, a & 执行运算操作，a指定运算类型 \\
+        LOD & LOD L, a & 将层差为L、偏移为a的变量值压入栈顶 \\
+        STO & STO L, a & 将栈顶值存入层差为L、偏移为a的变量 \\
+        CAL & CAL L, a & 调用层差为L的过程，入口地址为a \\
+        INT & INT 0, a & 在栈顶分配a个存储单元 \\
+        JMP & JMP 0, a & 无条件跳转到地址a \\
+        JPC & JPC 0, a & 栈顶值为0（假）时跳转到地址a \\
+        RED & RED L, a & 读取输入并存入层差为L、偏移为a的变量 \\
+        WRT & WRT 0, 0 & 输出栈顶值 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{OPR运算指令}
+
+OPR指令通过A段指定具体的运算类型：
+
+\begin{table}[H]
+    \centering
+    \caption{OPR运算类型}
+    \label{tab:opr-types}
+    \begin{tabular}{cll}
+        \toprule
+        \textbf{A值} & \textbf{助记符} & \textbf{功能} \\
+        \midrule
+        0 & RET & 过程返回 \\
+        1 & NEG & 取负 \\
+        2 & ADD & 加法 \\
+        3 & SUB & 减法 \\
+        4 & MUL & 乘法 \\
+        5 & DIV & 除法 \\
+        6 & ODD & 奇数判断 \\
+        8 & EQ & 等于比较 \\
+        9 & NEQ & 不等于比较 \\
+        10 & LT & 小于比较 \\
+        11 & GEQ & 大于等于比较 \\
+        12 & GT & 大于比较 \\
+        13 & LEQ & 小于等于比较 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{代码生成实现}
+
+代码生成器提供emit和backpatch两个核心接口：
+
+\begin{lstlisting}[language=C++,caption={代码生成接口}]
+class CodeGenerator {
+private:
+    std::vector<Instruction> code;
+    int nextCodeAddress;
+    
+public:
+    // 生成一条指令，返回指令地址
+    int emit(OpCode op, int level, int address) {
+        code.push_back(Instruction(op, level, address));
+        return nextCodeAddress++;
+    }
+    
+    // 回填跳转地址
+    void backpatch(int codeIndex, int address) {
+        code[codeIndex].address = address;
+    }
+};
+\end{lstlisting}
+
+% =============================================================================
+% 第七章：解释器设计与实现
+% =============================================================================
+
+\chapter{解释器设计与实现}
+
+\section{虚拟机架构}
+
+解释器模拟了一个栈式虚拟机的执行环境\cite{lindholm2014java}，包含以下组件：
+
+\begin{itemize}
+    \item \textbf{CODE}：代码存储区，存放生成的目标代码
+    \item \textbf{STACK}：数据栈，用于存储数据和活动记录
+    \item \textbf{寄存器}：
+    \begin{itemize}
+        \item I（指令寄存器）：存放当前执行的指令
+        \item P（程序计数器）：指向下一条要执行的指令
+        \item T（栈顶指针）：指向栈顶
+        \item B（基址寄存器）：指向当前活动记录的起始位置
+    \end{itemize}
+\end{itemize}
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.7\textwidth]{figures/vm-architecture.pdf}
+%     \caption{虚拟机架构图}
+%     \label{fig:vm-arch}
+% \end{figure}
+
+\needfigure{栈式虚拟机架构图，展示CODE区、STACK区和四个寄存器的关系}
+
+\section{活动记录}
+
+过程调用时，在栈上创建活动记录（Activation Record），其结构如下：
+
+\begin{table}[H]
+    \centering
+    \caption{活动记录结构}
+    \label{tab:activation-record}
+    \begin{tabular}{cll}
+        \toprule
+        \textbf{偏移} & \textbf{名称} & \textbf{说明} \\
+        \midrule
+        0 & RA & 返回地址（Return Address） \\
+        1 & DL & 动态链（Dynamic Link），指向调用者的活动记录 \\
+        2 & SL & 静态链（Static Link），指向直接外层的活动记录 \\
+        3+ & - & 局部变量区 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{静态链与层差计算}
+
+静态链用于访问外层过程的变量。通过base函数沿静态链向上查找指定层差的活动记录：
+
+\begin{lstlisting}[language=C++,caption={层差计算}]
+int Interpreter::base(int level) {
+    int base = B;
+    while (level > 0) {
+        base = stack[base + SL_OFFSET];  // 沿静态链向上
+        level--;
+    }
+    return base;
+}
+\end{lstlisting}
+
+% 图片插入位置
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{figures/static-chain.pdf}
+%     \caption{静态链示意图}
+%     \label{fig:static-chain}
+% \end{figure}
+
+\needfigure{静态链示意图，展示嵌套过程调用时活动记录的链接关系}
+
+\section{指令执行}
+
+解释器的主循环采用取指-译码-执行的模式：
+
+\begin{lstlisting}[language=C++,caption={解释器主循环}]
+void Interpreter::run() {
+    running = true;
+    while (running && P < code.size()) {
+        I = code[P];  // 取指令
+        P++;          // 程序计数器前进
+        
+        switch (I.op) {  // 译码并执行
+            case OpCode::LIT: executeLIT(); break;
+            case OpCode::OPR: executeOPR(); break;
+            case OpCode::LOD: executeLOD(); break;
+            case OpCode::STO: executeSTO(); break;
+            case OpCode::CAL: executeCAL(); break;
+            case OpCode::INT: executeINT(); break;
+            case OpCode::JMP: executeJMP(); break;
+            case OpCode::JPC: executeJPC(); break;
+            case OpCode::RED: executeRED(); break;
+            case OpCode::WRT: executeWRT(); break;
+        }
+    }
+}
+\end{lstlisting}
+
+% =============================================================================
+% 第八章：诊断系统设计
+% =============================================================================
+
+\chapter{诊断系统设计}
+
+\section{设计目标}
+
+参考现代编译器（如Clang\cite{lattner2004llvm}）的诊断系统设计\cite{clang2023diagnostics}，本系统实现了友好的错误报告机制，具有以下特点：
+
+\begin{itemize}
+    \item 精确的源码位置定位
+    \item 彩色高亮显示
+    \item 错误/警告/提示分级
+    \item 修复建议
+\end{itemize}
+
+\section{诊断信息格式}
+
+诊断信息的输出格式如下：
+
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+test.pl0:5:12: error: expected ';', found 'begin'
+    5 |     var x y
+      |            ^
+      | help: add ';' before 'begin'
+\end{lstlisting}
+
+\section{实现架构}
+
+诊断系统的核心类是\texttt{DiagnosticEngine}：
+
+\begin{lstlisting}[language=C++,caption={诊断系统接口}]
+class DiagnosticEngine {
+public:
+    void setSource(const std::string& source, const std::string& file);
+    void error(int line, int col, const std::string& message);
+    void warning(int line, int col, const std::string& message);
+    void note(int line, int col, const std::string& message);
+    
+    // 常见错误的便捷方法
+    void errorExpected(int line, int col, 
+                       const std::string& expected, 
+                       const std::string& found);
+    void errorUndeclared(int line, int col, const std::string& name);
+    void errorRedeclared(int line, int col, const std::string& name);
+};
+\end{lstlisting}
+
+% =============================================================================
+% 第九章：系统测试与验证
+% =============================================================================
+
+\chapter{系统测试与验证}
+
+\section{测试策略}
+
+本系统采用多层次的测试策略\cite{myers2011art}：
+
+\begin{enumerate}
+    \item \textbf{单元测试}：针对各个模块的独立功能进行测试
+    \item \textbf{集成测试}：测试模块之间的协作
+    \item \textbf{系统测试}：测试完整的编译-执行流程
+    \item \textbf{边界测试}：测试各种边界条件和异常情况
+\end{enumerate}
+
+\section{测试用例设计}
+
+\subsection{词法分析测试}
+
+词法分析器的测试覆盖了所有词法单元类型，包括：
+
+\begin{itemize}
+    \item 关键字识别
+    \item 标识符识别
+    \item 数字常量识别
+    \item 运算符识别
+    \item 非法字符处理
+\end{itemize}
+
+\subsection{语法分析测试}
+
+语法分析器的测试覆盖了所有语法结构：
+
+\begin{itemize}
+    \item 程序结构
+    \item 声明语句
+    \item 赋值语句
+    \item 条件语句
+    \item 循环语句
+    \item 过程调用
+    \item 嵌套结构
+\end{itemize}
+
+\section{测试结果}
+
+% 表格或测试结果展示
+\needfigure{测试结果汇总表格或测试通过率统计图}
+
+\section{示例程序}
+
+\subsection{阶乘计算}
+
+\begin{lstlisting}[style=pl0style,caption={阶乘计算程序}]
+program factorial;
+var n, result;
+begin
+    read(n);
+    result := 1;
+    while n > 0 do
+    begin
+        result := result * n;
+        n := n - 1
+    end;
+    write(result)
+end
+\end{lstlisting}
+
+\subsection{斐波那契数列}
+
+\begin{lstlisting}[style=pl0style,caption={斐波那契数列程序}]
+program fibonacci;
+const max = 10;
+var i, a, b, temp;
+begin
+    a := 0;
+    b := 1;
+    i := 0;
+    while i < max do
+    begin
+        write(a);
+        temp := a + b;
+        a := b;
+        b := temp;
+        i := i + 1
+    end
+end
+\end{lstlisting}
+
+% =============================================================================
+% 第十章：总结与展望
+% =============================================================================
+
+\chapter{总结与展望}
+
+\section{课程设计总结}
+
+本课程设计成功实现了一个完整的PL/0语言编译器系统，主要完成了以下工作：
+
+\begin{enumerate}
+    \item 实现了基于双缓冲区技术的词法分析器，能够高效处理源程序输入；
+    \item 实现了基于递归下降的语法分析器，与代码生成紧密结合；
+    \item 设计并实现了支持嵌套作用域的符号表管理机制；
+    \item 实现了完整的目标代码生成器，生成栈式虚拟机指令；
+    \item 实现了栈式虚拟机解释器，支持程序执行和调试；
+    \item 实现了类Clang风格的诊断系统，提供友好的错误报告。
+\end{enumerate}
+
+\section{收获与体会}
+
+通过本次课程设计，深入理解了编译原理的核心概念和技术：
+
+\begin{itemize}
+    \item 词法分析中的有限自动机理论和双缓冲技术
+    \item 语法分析中的上下文无关文法和递归下降方法
+    \item 符号表的作用域管理和地址分配
+    \item 中间代码生成和回填技术
+    \item 栈式虚拟机的运行时环境设计
+\end{itemize}
+
+同时，也锻炼了软件工程实践能力，包括模块化设计、接口定义、错误处理等方面。
+
+\section{改进方向}
+
+未来可以从以下方面对系统进行改进：
+
+\begin{enumerate}
+    \item 扩展PL/0语言特性，如数组、浮点数、字符串等
+    \item 实现代码优化，如常量折叠、死代码消除等
+    \item 生成真实的机器代码或LLVM IR
+    \item 增加更多的静态语义检查
+    \item 实现调试器功能
+\end{enumerate}
+
+% =============================================================================
+% 参考文献
+% =============================================================================
+
+\printbibliography[heading=bibintoc,title={参考文献}]
+
+% =============================================================================
+% 附录
+% =============================================================================
+
+\begin{appendices}
+
+\chapter{词法分析器单元测试}
+\label{appendix:lexer-test}
+
+本附录给出词法分析器的单元测试用例及测试结果。
+
+\section{测试用例设计}
+
+\subsection{关键字识别测试}
+
+\begin{lstlisting}[style=pl0style,caption={关键字识别测试输入}]
+program const var procedure begin end
+if then else while do call read write odd
+\end{lstlisting}
+
+预期输出：所有关键字应正确识别为对应的Token类型。
+
+\subsection{标识符识别测试}
+
+\begin{lstlisting}[caption={标识符识别测试输入}]
+x y123 abc_def ABC
+\end{lstlisting}
+
+\subsection{数字识别测试}
+
+\begin{lstlisting}[caption={数字识别测试输入}]
+0 123 999999
+\end{lstlisting}
+
+\subsection{运算符识别测试}
+
+\begin{lstlisting}[caption={运算符识别测试输入}]
++ - * / := = <> < <= > >=
+\end{lstlisting}
+
+\subsection{非法字符测试}
+
+\begin{lstlisting}[caption={非法字符测试输入}]
+@ # $ %
+\end{lstlisting}
+
+预期输出：应报告非法字符错误。
+
+\section{测试结果}
+
+% 表格展示测试结果
+\needfigure{词法分析器测试结果表格}
+
+\chapter{语法分析器单元测试}
+\label{appendix:parser-test}
+
+本附录给出语法分析器的单元测试用例及测试结果。
+
+\section{测试用例设计}
+
+\subsection{程序结构测试}
+
+\begin{lstlisting}[style=pl0style,caption={最简程序}]
+program test;
+begin
+end
+\end{lstlisting}
+
+\subsection{常量声明测试}
+
+\begin{lstlisting}[style=pl0style,caption={常量声明测试}]
+program test;
+const a := 1, b := 2, c := 3;
+begin
+end
+\end{lstlisting}
+
+\subsection{变量声明测试}
+
+\begin{lstlisting}[style=pl0style,caption={变量声明测试}]
+program test;
+var x, y, z;
+begin
+end
+\end{lstlisting}
+
+\subsection{过程声明测试}
+
+\begin{lstlisting}[style=pl0style,caption={过程声明测试}]
+program test;
+procedure proc1();
+begin
+end;
+begin
+    call proc1()
+end
+\end{lstlisting}
+
+\subsection{条件语句测试}
+
+\begin{lstlisting}[style=pl0style,caption={条件语句测试}]
+program test;
+var x;
+begin
+    x := 5;
+    if x > 0 then
+        x := x - 1
+    else
+        x := 0
+end
+\end{lstlisting}
+
+\subsection{循环语句测试}
+
+\begin{lstlisting}[style=pl0style,caption={循环语句测试}]
+program test;
+var i, sum;
+begin
+    i := 1;
+    sum := 0;
+    while i <= 10 do
+    begin
+        sum := sum + i;
+        i := i + 1
+    end;
+    write(sum)
+end
+\end{lstlisting}
+
+\section{语法错误处理测试}
+
+\subsection{缺少分号}
+
+\begin{lstlisting}[style=pl0style,caption={缺少分号测试}]
+program test;
+var x
+begin
+    x := 1
+end
+\end{lstlisting}
+
+预期输出：报告缺少分号错误。
+
+\subsection{未声明标识符}
+
+\begin{lstlisting}[style=pl0style,caption={未声明标识符测试}]
+program test;
+begin
+    x := 1
+end
+\end{lstlisting}
+
+预期输出：报告未声明标识符错误。
+
+\section{测试结果}
+
+\needfigure{语法分析器测试结果表格}
+
+\chapter{代码生成器单元测试}
+\label{appendix:codegen-test}
+
+本附录给出代码生成器的单元测试用例及测试结果。
+
+\section{测试用例设计}
+
+\subsection{表达式代码生成}
+
+输入：\texttt{x := 1 + 2 * 3}
+
+预期生成代码：
+\begin{lstlisting}[caption={表达式代码生成结果}]
+0  LIT  0  1    ; load constant 1
+1  LIT  0  2    ; load constant 2
+2  LIT  0  3    ; load constant 3
+3  OPR  0  4    ; MUL
+4  OPR  0  2    ; ADD
+5  STO  0  3    ; store to x
+\end{lstlisting}
+
+\subsection{条件跳转代码生成}
+
+输入：
+\begin{lstlisting}[style=pl0style]
+if x > 0 then
+    y := 1
+else
+    y := 0
+\end{lstlisting}
+
+预期生成代码：
+\begin{lstlisting}[caption={条件跳转代码生成结果}]
+0  LOD  0  3    ; load x
+1  LIT  0  0    ; load 0
+2  OPR  0  12   ; GT (greater than)
+3  JPC  0  7    ; jump to else if false
+4  LIT  0  1    ; load 1
+5  STO  0  4    ; store to y
+6  JMP  0  9    ; jump over else
+7  LIT  0  0    ; load 0
+8  STO  0  4    ; store to y
+\end{lstlisting}
+
+\section{测试结果}
+
+\needfigure{代码生成器测试结果表格}
+
+\chapter{解释器单元测试}
+\label{appendix:interpreter-test}
+
+本附录给出解释器的单元测试用例及测试结果。
+
+\section{测试用例设计}
+
+\subsection{算术运算测试}
+
+测试加、减、乘、除和取负运算的正确性。
+
+\subsection{比较运算测试}
+
+测试所有关系运算符（=, <>, <, <=, >, >=）的正确性。
+
+\subsection{过程调用测试}
+
+测试过程调用、参数传递和返回的正确性。
+
+\subsection{嵌套过程测试}
+
+测试嵌套过程定义和静态链的正确性。
+
+\section{测试结果}
+
+\needfigure{解释器测试结果表格}
+
+\chapter{集成测试}
+\label{appendix:integration-test}
+
+本附录给出完整编译-执行流程的集成测试。
+
+\section{测试程序}
+
+\subsection{复杂程序测试1：求最大公约数}
+
+\begin{lstlisting}[style=pl0style,caption={最大公约数程序}]
+program gcd;
+var a, b, temp;
+begin
+    read(a);
+    read(b);
+    while b <> 0 do
+    begin
+        temp := a - (a / b) * b;
+        a := b;
+        b := temp
+    end;
+    write(a)
+end
+\end{lstlisting}
+
+\subsection{复杂程序测试2：递归过程}
+
+\begin{lstlisting}[style=pl0style,caption={递归过程测试}]
+program recursive;
+var n, result;
+procedure fact(n);
+var temp;
+begin
+    if n <= 1 then
+        result := 1
+    else
+    begin
+        temp := n;
+        call fact(n - 1);
+        result := result * temp
+    end
+end;
+begin
+    read(n);
+    call fact(n);
+    write(result)
+end
+\end{lstlisting}
+
+\section{测试结果}
+
+\needfigure{集成测试结果汇总}
+
+\chapter{复杂算法设计说明}
+\label{appendix:algorithms}
+
+本附录详细说明系统中使用的关键算法。
+
+\section{双缓冲区算法}
+
+\subsection{算法描述}
+
+双缓冲区算法使用两个等大的缓冲区交替加载输入数据，在每个缓冲区末尾放置哨兵字符\cite{aho1986double}。
+
+\begin{algorithm}[H]
+\caption{双缓冲区读取算法}
+\begin{algorithmic}[1]
+\State 初始化buffer1和buffer2
+\State 在sentinel1和sentinel2位置放置哨兵字符EOF
+\State 加载buffer1
+\State 设置forward = lexemeBegin = buffer1起始位置
+\While{未到达输入结尾}
+    \If{*forward == EOF}
+        \If{forward在buffer1末尾}
+            \State 加载buffer2
+            \State forward = buffer2起始位置
+        \ElsIf{forward在buffer2末尾}
+            \State 加载buffer1
+            \State forward = buffer1起始位置
+        \Else
+            \State 真正的EOF，终止
+        \EndIf
+    \Else
+        \State 处理*forward
+        \State forward++
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{时间复杂度分析}
+
+双缓冲区算法的时间复杂度为$O(n)$，其中$n$为输入字符数。每个字符仅被读取一次，缓冲区切换的开销为常数时间。
+
+\section{递归下降分析算法}
+
+\subsection{算法描述}
+
+递归下降分析为每个非终结符编写一个分析函数，根据当前输入符号选择产生式进行推导。
+
+\begin{algorithm}[H]
+\caption{表达式分析算法}
+\begin{algorithmic}[1]
+\Procedure{ParseExp}{}
+    \State negative $\leftarrow$ false
+    \If{当前Token为MINUS}
+        \State negative $\leftarrow$ true
+        \State advance()
+    \ElsIf{当前Token为PLUS}
+        \State advance()
+    \EndIf
+    \State ParseTerm()
+    \If{negative}
+        \State emit(OPR, 0, NEG)
+    \EndIf
+    \While{当前Token为PLUS或MINUS}
+        \State op $\leftarrow$ 当前Token类型
+        \State advance()
+        \State ParseTerm()
+        \If{op == PLUS}
+            \State emit(OPR, 0, ADD)
+        \Else
+            \State emit(OPR, 0, SUB)
+        \EndIf
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{静态链查找算法}
+
+\subsection{算法描述}
+
+静态链查找用于访问外层过程的变量，通过沿静态链向上遍历找到指定层差的活动记录。
+
+\begin{algorithm}[H]
+\caption{静态链查找算法}
+\begin{algorithmic}[1]
+\Function{Base}{level}
+    \State base $\leftarrow$ B
+    \While{level $>$ 0}
+        \State base $\leftarrow$ stack[base + SL\_OFFSET]
+        \State level $\leftarrow$ level - 1
+    \EndWhile
+    \State \Return base
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{时间复杂度分析}
+
+静态链查找的时间复杂度为$O(d)$，其中$d$为过程的嵌套深度。在实际应用中，嵌套深度通常很小，可视为常数。
+
+\end{appendices}
+
+\end{document}

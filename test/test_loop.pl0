@@ -1,0 +1,13 @@
+program sum;
+var n, i, total;
+begin
+    read(n);
+    i := 1;
+    total := 0;
+    while i <= n do
+    begin
+        total := total + i;
+        i := i + 1
+    end;
+    write(total)
+end

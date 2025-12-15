@@ -1,0 +1,7 @@
+program interactive;
+var a, b, sum;
+begin
+    read(a, b);
+    sum := a + b;
+    write(sum)
+end

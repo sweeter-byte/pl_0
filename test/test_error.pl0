@@ -1,0 +1,7 @@
+program errors;
+var x, y;
+begin
+    x = 10;
+    y := x + z;
+    write(result)
+end

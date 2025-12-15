@@ -1,0 +1,15 @@
+program procedures;
+var x, y;
+
+procedure printsum();
+var sum;
+begin
+    sum := x + y;
+    write(sum)
+end;
+
+begin
+    x := 10;
+    y := 20;
+    call printsum()
+end

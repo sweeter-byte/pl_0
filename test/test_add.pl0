@@ -1,0 +1,8 @@
+program add;
+var x, y, result;
+begin
+    x := 5;
+    y := 10;
+    result := (x + y) * 2;
+    write(result)
+end

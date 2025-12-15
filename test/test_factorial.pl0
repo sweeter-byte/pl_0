@@ -1,0 +1,27 @@
+program factorial;
+const max := 10;
+var n, result;
+
+procedure calc();
+var i, temp;
+begin
+    i := 1;
+    temp := 1;
+    while i <= n do
+    begin
+        temp := temp * i;
+        i := i + 1
+    end;
+    result := temp
+end;
+
+begin
+    read(n);
+    if n > max then
+        write(0)
+    else
+    begin
+        call calc();
+        write(result)
+    end
+end
