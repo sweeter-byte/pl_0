@@ -67,7 +67,7 @@ inline void printVersion(bool useColor = true) {
 ║  Supports the full PL/0 grammar with Clang-style diagnostics     ║
 ║                                                                  ║
 ║  Author  : myRan @ NUAA                                          ║
-║  GitHub  : https://github.com/yourusername/pl0-compiler          ║
+║  GitHub  : https://github.com/sweeter-byte/pl_0                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 )" << std::endl;
 
