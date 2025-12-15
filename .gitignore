@@ -1,0 +1,12 @@
+build/
+
+# latex
+main-blx.bib
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.pdf
+*.xml
+*.toc
