@@ -2,10 +2,10 @@
 #include <iostream>
 #include <iomanip>
 
-// ========== SymbolTable 实现 ==========
-
+// SymbolTable 实现
+// 0-indexed
 SymbolTable::SymbolTable() : currentLevel(-1) {
-    enterScope();  // 初始化全局作用域
+    enterScope();  // 初始化全局作用域 scopes[0]
 }
 
 void SymbolTable::enterScope() {
@@ -45,7 +45,7 @@ Symbol* SymbolTable::lookup(const std::string& name) {
 }
 
 Symbol* SymbolTable::lookupCurrent(const std::string& name) {
-    // 只在当前作用域查找
+    // 只在当前作用域查找 
     if (currentLevel >= 0 && static_cast<size_t>(currentLevel) < scopes.size()) {
         for (auto& sym : scopes[currentLevel]) {
             if (sym.name == name) {
@@ -77,13 +77,15 @@ void SymbolTable::setAddress(int addr) {
 }
 
 void SymbolTable::printSymbolTable() const {
-    std::cout << "\n========== Symbol Table ==========\n";
+    std::cout << "\n" << std::string(17, '=');
+    std::cout << " Symbol Table ";
+    std::cout << std::string(17,'=') << "\n";
     std::cout << std::left 
               << std::setw(15) << "Name"
               << std::setw(12) << "Type"
               << std::setw(8) << "Level"
               << "Address/Value\n";
-    std::cout << std::string(45, '-') << "\n";
+    std::cout << std::string(48, '-') << "\n";
     
     for (int i = 0; i <= currentLevel && static_cast<size_t>(i) < scopes.size(); i++) {
         for (const auto& sym : scopes[i]) {
@@ -103,15 +105,14 @@ void SymbolTable::printSymbolTable() const {
                     break;
             }
             
-            std::cout << std::setw(8) << sym.level
-                      << sym.address << "\n";
+            std::cout << std::setw(8) << sym.level << sym.address << "\n";
         }
     }
-    std::cout << std::string(45, '=') << "\n\n";
+    std::cout << std::string(48, '=') << "\n\n";
 }
 
-// ========== CodeGenerator 实现 ==========
-
+// CodeGenerator 实现
+// 0-indexed
 CodeGenerator::CodeGenerator() : nextCodeAddress(0) {}
 
 int CodeGenerator::emit(OpCode op, int level, int address) {
@@ -161,7 +162,9 @@ std::string CodeGenerator::oprTypeToString(int oprType) {
 }
 
 void CodeGenerator::printCode() const {
-    std::cout << "\n========== Generated Code ==========\n";
+    std::cout << '\n' << std::string(22, '=');
+    std::cout << " Generated Code ";
+    std::cout << std::string(22, '=') << '\n';
     std::cout << std::left 
               << std::setw(8) << "Addr"
               << std::setw(8) << "OP"
