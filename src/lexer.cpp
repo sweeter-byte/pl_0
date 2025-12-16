@@ -7,10 +7,7 @@
 #include <fstream>
 #include <stdexcept>
 
-// ============================================================
 // InputBuffer Implementation
-// ============================================================
-
 InputBuffer::InputBuffer() 
     : input(nullptr), ownsStream(false),
       lexemeBegin(nullptr), forward(nullptr),
@@ -368,10 +365,7 @@ std::string InputBuffer::getSourceLine(int lineNum) const {
     return "";
 }
 
-// ============================================================
 // Lexer Implementation
-// ============================================================
-
 Lexer::Lexer(DiagnosticEngine* diag) 
     : diagnostics(diag), hasErrorFlag(false) {
     // Initialize keywords
@@ -381,16 +375,13 @@ Lexer::Lexer(DiagnosticEngine* diag)
     };
 }
 
-// Constructor compatible with old interface
 Lexer::Lexer(const std::string& sourceCode, DiagnosticEngine* diag) 
     : diagnostics(diag), hasErrorFlag(false) {
-    // Initialize keywords
     keywords = {
         "program", "const", "var", "procedure", "begin", "end",
         "if", "then", "else", "while", "do", "call", "read", "write", "odd"
     };
     
-    // Initialize buffer from string
     buffer.initFromString(sourceCode);
 }
 
@@ -423,19 +414,14 @@ void Lexer::skipWhitespace() {
 void Lexer::reportError(const std::string& message) {
     hasErrorFlag = true;
     if (diagnostics) {
-        diagnostics->error(buffer.getLexemeStartLine(), 
-                          buffer.getLexemeStartColumn(), 
-                          message);
+        diagnostics->error(buffer.getLexemeStartLine(), buffer.getLexemeStartColumn(), message);
     }
 }
 
 void Lexer::reportError(const std::string& message, const std::string& suggestion) {
     hasErrorFlag = true;
     if (diagnostics) {
-        Diagnostic diag(DiagnosticLevel::Error, 
-                       SourceLocation(buffer.getLexemeStartLine(), 
-                                     buffer.getLexemeStartColumn()), 
-                       message);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(buffer.getLexemeStartLine(), buffer.getLexemeStartColumn()), message);
         diag.withSuggestion(suggestion);
         diagnostics->report(diag);
     }
@@ -444,11 +430,7 @@ void Lexer::reportError(const std::string& message, const std::string& suggestio
 void Lexer::reportErrorWithLength(const std::string& message, int length) {
     hasErrorFlag = true;
     if (diagnostics) {
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(buffer.getLexemeStartLine(), 
-                                     buffer.getLexemeStartColumn(), 
-                                     length),
-                       message);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(buffer.getLexemeStartLine(), buffer.getLexemeStartColumn(), length), message);
         diagnostics->report(diag);
     }
 }
@@ -468,8 +450,7 @@ Token Lexer::readIdentifierOrKeyword() {
     
     // Check for underscore at start (invalid in standard PL/0)
     if (!value.empty() && value[0] == '_') {
-        reportError("identifier cannot start with underscore", 
-                   "identifiers must start with a letter");
+        reportError("identifier cannot start with underscore", "identifiers must start with a letter");
         return Token(TokenType::ERROR, value, startLine, startCol);
     }
     
@@ -524,10 +505,7 @@ Token Lexer::readNumber() {
             advance();
         }
         
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(startLine, startCol, 
-                                     static_cast<int>(invalidToken.length())),
-                       "invalid identifier '" + invalidToken + "'");
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol, static_cast<int>(invalidToken.length())), "invalid identifier '" + invalidToken + "'");
         diag.withSuggestion("identifiers cannot start with a digit");
         if (diagnostics) {
             diagnostics->report(diag);
@@ -541,20 +519,14 @@ Token Lexer::readNumber() {
     try {
         long long num = std::stoll(value);
         if (num > 2147483647LL || num < -2147483648LL) {
-            Diagnostic diag(DiagnosticLevel::Warning,
-                           SourceLocation(startLine, startCol, 
-                                         static_cast<int>(value.length())),
-                           "integer literal is too large");
+            Diagnostic diag(DiagnosticLevel::Warning, SourceLocation(startLine, startCol, static_cast<int>(value.length())), "integer literal is too large");
             diag.withSuggestion("maximum value is 2147483647");
             if (diagnostics) {
                 diagnostics->report(diag);
             }
         }
     } catch (...) {
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(startLine, startCol, 
-                                     static_cast<int>(value.length())),
-                       "integer literal overflow");
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol,  static_cast<int>(value.length())), "integer literal overflow");
         if (diagnostics) {
             diagnostics->report(diag);
         }
@@ -641,9 +613,7 @@ Token Lexer::readOperator() {
             }
             // Error: lone colon
             {
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol),
-                               "unexpected ':' - did you mean ':='?");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol), "unexpected ':' - did you mean ':='?");
                 diag.withSuggestion("use ':=' for assignment");
                 diag.withFix(":=");
                 if (diagnostics) {
@@ -658,9 +628,7 @@ Token Lexer::readOperator() {
             advance();
             if (currentChar() == '=') {
                 advance();
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol, 2),
-                               "'!=' is not valid in PL/0");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol, 2), "'!=' is not valid in PL/0");
                 diag.withSuggestion("use '<>' for not-equal comparison");
                 diag.withFix("<>");
                 if (diagnostics) {
@@ -671,9 +639,7 @@ Token Lexer::readOperator() {
             }
             // Lone !
             {
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol),
-                               "unexpected character '!'");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol), "unexpected character '!'");
                 if (diagnostics) {
                     diagnostics->report(diag);
                 }
@@ -692,10 +658,7 @@ Token Lexer::readOperator() {
                     advance();
                     opStr += op;
                 }
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol, 
-                                             static_cast<int>(opStr.length())),
-                               "'" + opStr + "' is not valid in PL/0");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol,  static_cast<int>(opStr.length())), "'" + opStr + "' is not valid in PL/0");
                 diag.withSuggestion("PL/0 does not have logical operators");
                 if (diagnostics) {
                     diagnostics->report(diag);
@@ -738,10 +701,7 @@ Token Lexer::readOperator() {
                     }
                 }
                 
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol, 
-                                             static_cast<int>(invalidChars.length())),
-                               "invalid character(s) '" + invalidChars + "'");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol,  static_cast<int>(invalidChars.length())), "invalid character(s) '" + invalidChars + "'");
                 diag.withSuggestion("PL/0 only supports ASCII characters");
                 if (diagnostics) {
                     diagnostics->report(diag);
@@ -770,10 +730,7 @@ Token Lexer::readOperator() {
                     advance();
                 }
                 
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(startLine, startCol, 
-                                             static_cast<int>(invalidChars.length())),
-                               "unexpected character '" + invalidChars + "'");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(startLine, startCol, static_cast<int>(invalidChars.length())), "unexpected character '" + invalidChars + "'");
                 
                 // Provide helpful suggestions for common mistakes
                 if (invalidChars == "{" || invalidChars == "}") {
@@ -815,8 +772,7 @@ std::vector<Token> Lexer::tokenize() {
     }
     
     // Add EOF token
-    tokens.push_back(Token(TokenType::END_OF_FILE, "", 
-                          buffer.getLine(), buffer.getColumn(), 0));
+    tokens.push_back(Token(TokenType::END_OF_FILE, "", buffer.getLine(), buffer.getColumn(), 0));
     return tokens;
 }
 
@@ -913,31 +869,31 @@ void Lexer::printTokens(const std::vector<Token>& tokenList) const {
     
     // Print table header
     std::cout << "\n" << BOLD << CYAN 
-              << "╔══════════════════════════════════════════════════════╗" << RESET << "\n";
-    std::cout << BOLD << CYAN << "║" << RESET << "                   " << BOLD 
-              << "TOKEN LIST" << RESET << "                         " << CYAN << "║" << RESET << "\n";
+              << "+---------------------------------------------+" << RESET << "\n";
+    std::cout << BOLD << CYAN << "|" << RESET << "                " << BOLD 
+              << "TOKEN LIST" << RESET << "                   " << CYAN << "|" << RESET << "\n";
     std::cout << BOLD << CYAN 
-              << "╠══════════════════════════════════════════════════════╣" << RESET << "\n";
-    std::cout << BOLD << CYAN << "║" << RESET 
+              << "+-----+------+-------------+------------------+" << RESET << "\n";
+    std::cout << BOLD << CYAN << "|" << RESET 
               << BOLD << std::left 
               << std::setw(8) << " Line" 
               << std::setw(8) << "Col" 
               << std::setw(14) << "Type" 
               << "Value" << RESET
-              << std::string(15, ' ') << CYAN << "║" << RESET << "\n";
+              << std::string(10, ' ') << CYAN << "|" << RESET << "\n";
     std::cout << BOLD << CYAN 
-              << "╠══════════════════════════════════════════════════════╣" << RESET << "\n";
-    
+              << "+-----+------+-------------+------------------+" << RESET << "\n";
+
     // Print each token
     for (const auto& token : tokenList) {
-        std::cout << CYAN << "║" << RESET << " ";
-        
+        std::cout << CYAN << "|" << RESET << " ";
+    
         // Line number
         std::cout << BLUE << std::setw(6) << token.line << RESET << " ";
-        
+    
         // Column number
         std::cout << std::setw(7) << token.column << " ";
-        
+    
         // Token type (with color coding)
         std::string typeStr = tokenTypeToString(token.type);
         if (token.type == TokenType::ERROR) {
@@ -949,22 +905,21 @@ void Lexer::printTokens(const std::vector<Token>& tokenList) const {
         } else {
             std::cout << std::setw(13) << typeStr << " ";
         }
-        
+    
         // Token value
         if (token.type == TokenType::END_OF_FILE) {
-            std::cout << std::setw(19) << "" << CYAN << "║" << RESET << "\n";
+            std::cout << std::setw(15) << "" << CYAN << "|" << RESET << "\n";
         } else {
             std::string val = token.value;
             if (val.length() > 18) {
                 val = val.substr(0, 15) + "...";
             }
-            std::cout << std::left << std::setw(19) << val << CYAN << "║" << RESET << "\n";
+            std::cout << std::left << std::setw(15) << val << CYAN << "|" << RESET << "\n";
         }
     }
-    
+
     // Print table footer
-    std::cout << BOLD << CYAN 
-              << "╚══════════════════════════════════════════════════════╝" << RESET << "\n\n";
+    std::cout << BOLD << CYAN << "+---------------------------------------------+" << RESET << "\n\n";
     
     // Print summary
     int tokenCount = static_cast<int>(tokenList.size()) - 1;  // Exclude EOF token
