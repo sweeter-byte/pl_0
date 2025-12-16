@@ -6,20 +6,20 @@
 #include <stack>
 #include <iostream>
 
-// 解释器配置
-const int STACK_SIZE = 10000;   // 栈大小
-const int CODE_SIZE = 1000;     // 代码区大小
+// Interpreter configuration
+const int STACK_SIZE = 10000;   // stack size
+const int CODE_SIZE = 1000;     // code size
 
-// 活动记录布局
-const int RA_OFFSET = 0;  // 返回地址 (Return Address)
-const int DL_OFFSET = 1;  // 动态链 (Dynamic Link) - 调用者的活动记录首地址
-const int SL_OFFSET = 2;  // 静态链 (Static Link) - 直接外层的活动记录首地址
+// Activation record layout
+const int RA_OFFSET = 0;  // Return Address
+const int DL_OFFSET = 1;  // Dynamic Link - Caller's activation record base address
+const int SL_OFFSET = 2;  // Static Link - 直接外层的活动记录首地址
 
 class Interpreter {
 private:
     // 存储器
-    std::vector<Instruction> code;     // CODE: 代码存储器
-    std::vector<int> stack;            // STACK: 数据栈
+    std::vector<Instruction> code;     
+    std::vector<int> stack;            
     
     // 寄存器
     Instruction I;   // 指令寄存器 - 当前执行的指令
