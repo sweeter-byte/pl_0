@@ -150,9 +150,7 @@ public:
     void reset();
 };
 
-// ============================================================
 // Lexer Class
-// ============================================================
 class Lexer {
 private:
     InputBuffer buffer;            // Input buffer
@@ -182,7 +180,7 @@ public:
     // Constructor
     Lexer(DiagnosticEngine* diag = nullptr);
     
-    // Initialization methods (replace original constructor parameter)
+    // Initialization methods 
     void initFromFile(const std::string& filename);
     void initFromString(const std::string& source);
     
