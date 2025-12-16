@@ -29,7 +29,7 @@ enum class OprType {
     MUL = 4,    // 乘
     DIV = 5,    // 除
     ODD = 6,    // 奇数判断
-    // 7 保留
+    // 7 保留(后面拓展为 mod)
     EQ = 8,     // 等于
     NEQ = 9,    // 不等于
     LT = 10,    // 小于
@@ -68,7 +68,7 @@ struct Instruction {
 // 符号表（支持作用域）
 class SymbolTable {
 private:
-    std::vector<std::vector<Symbol>> scopes;  // 每一层作用域的符号
+    std::vector<std::vector<Symbol>> scopes;  // 每一层作用域的符号, scopes[0] means global variable, scopes[1] means fisrt level
     int currentLevel;
     std::vector<int> addressStack;  // 每层的地址计数
     
