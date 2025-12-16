@@ -300,7 +300,9 @@ void Interpreter::step() {
 }
 
 void Interpreter::run() {
-    std::cout << "\n========== Program Execution ==========\n\n";
+    std::cout << "\n" << std::string(15, '=');
+    std::cout << " Program Execution ";
+    std::cout << std::string(15,'=') << "\n\n";
     
     running = true;
     P = 0;
@@ -319,9 +321,9 @@ void Interpreter::run() {
         }
     }
     
-    std::cout << "\n========================================\n";
+    std::cout << "\n" << std::string(50, '=') << "\n";
     std::cout << "Program terminated.\n";
     std::cout << "Total steps executed: " << stepCount << "\n";
-    std::cout << "========================================\n\n";
+    std::cout << std::string(50, '=') << "\n\n";
 }
 
