@@ -3,13 +3,10 @@
 #include <iostream>
 #include <sstream>
 
-// ============================================================
-// Constructor and Token Navigation
-// ============================================================
 
+// Constructor and Token Navigation
 ParserWithCodegen::ParserWithCodegen(const std::vector<Token>& tokenList, DiagnosticEngine* diag) 
-    : tokens(tokenList), position(0), indentLevel(0), 
-      diagnostics(diag), hasErrorFlag(false) {}
+    : tokens(tokenList), position(0), indentLevel(0), diagnostics(diag), hasErrorFlag(false) {}
 
 Token ParserWithCodegen::currentToken() {
     if (position >= tokens.size()) {
@@ -26,6 +23,7 @@ Token ParserWithCodegen::peekToken(int offset) {
     return tokens[peekPos];
 }
 
+// for better error report, I use one previous token
 Token ParserWithCodegen::previousToken() {
     if (position > 0) {
         return tokens[position - 1];
@@ -51,10 +49,7 @@ bool ParserWithCodegen::check(TokenType type) {
     return currentToken().type == type;
 }
 
-// ============================================================
 // Error Handling and Reporting
-// ============================================================
-
 void ParserWithCodegen::reportError(const std::string& message) {
     hasErrorFlag = true;
     if (diagnostics) {
@@ -67,9 +62,7 @@ void ParserWithCodegen::reportError(const std::string& message, const std::strin
     hasErrorFlag = true;
     if (diagnostics) {
         Token tok = currentToken();
-        Diagnostic diag(DiagnosticLevel::Error, 
-                       SourceLocation(tok.line, tok.column, tok.length),
-                       message);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(tok.line, tok.column, tok.length), message);
         diag.withSuggestion(suggestion);
         diagnostics->report(diag);
     }
@@ -78,9 +71,7 @@ void ParserWithCodegen::reportError(const std::string& message, const std::strin
 void ParserWithCodegen::reportErrorAt(const Token& token, const std::string& message) {
     hasErrorFlag = true;
     if (diagnostics) {
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(token.line, token.column, token.length),
-                       message);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(token.line, token.column, token.length), message);
         diagnostics->report(diag);
     }
 }
@@ -88,9 +79,7 @@ void ParserWithCodegen::reportErrorAt(const Token& token, const std::string& mes
 void ParserWithCodegen::reportErrorAt(const Token& token, const std::string& message, const std::string& suggestion) {
     hasErrorFlag = true;
     if (diagnostics) {
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(token.line, token.column, token.length),
-                       message);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(token.line, token.column, token.length), message);
         diag.withSuggestion(suggestion);
         diagnostics->report(diag);
     }
@@ -100,14 +89,10 @@ void ParserWithCodegen::reportExpected(const std::string& expected) {
     hasErrorFlag = true;
     if (diagnostics) {
         Token tok = currentToken();
-        std::string found = (tok.type == TokenType::END_OF_FILE) 
-                           ? "end of file" 
-                           : "'" + tok.value + "'";
+        std::string found = (tok.type == TokenType::END_OF_FILE)  ? "end of file" : "'" + tok.value + "'";
         std::string msg = "expected " + expected + ", found " + found;
         
-        Diagnostic diag(DiagnosticLevel::Error,
-                       SourceLocation(tok.line, tok.column, tok.length),
-                       msg);
+        Diagnostic diag(DiagnosticLevel::Error, SourceLocation(tok.line, tok.column, tok.length), msg);
         
         // Add helpful suggestions for common mistakes
         if (expected == "';'") {
@@ -142,9 +127,7 @@ void ParserWithCodegen::reportExpected(const std::string& expected) {
 void ParserWithCodegen::reportExpectedAt(const Token& token, const std::string& expected) {
     hasErrorFlag = true;
     if (diagnostics) {
-        std::string found = (token.type == TokenType::END_OF_FILE)
-                           ? "end of file"
-                           : "'" + token.value + "'";
+        std::string found = (token.type == TokenType::END_OF_FILE) ? "end of file" : "'" + token.value + "'";
         std::string msg = "expected " + expected + ", found " + found;
         diagnostics->error(token.line, token.column, msg);
     }
@@ -179,15 +162,11 @@ void ParserWithCodegen::expectSemicolon() {
                 // Likely forgot semicolon between statements
                 suggestion = "add ';' after '" + prev.value + "'";
                 // Point to end of previous token
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(prev.line, prev.column + prev.length, 1),
-                               msg);
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(prev.line, prev.column + prev.length, 1), msg);
                 diag.withSuggestion(suggestion);
                 diagnostics->report(diag);
             } else {
-                Diagnostic diag(DiagnosticLevel::Error,
-                               SourceLocation(tok.line, tok.column, tok.length),
-                               msg + ", found '" + tok.value + "'");
+                Diagnostic diag(DiagnosticLevel::Error, SourceLocation(tok.line, tok.column, tok.length), msg + ", found '" + tok.value + "'");
                 diagnostics->report(diag);
             }
         }
@@ -231,9 +210,7 @@ void ParserWithCodegen::synchronizeTo(std::initializer_list<TokenType> types) {
     }
 }
 
-// ============================================================
 // Parse Tree Output (controlled by options)
-// ============================================================
 
 void ParserWithCodegen::printIndent() {
     if (!options.showParseTree) return;
@@ -260,9 +237,7 @@ void ParserWithCodegen::parseLogExit(const std::string& rule) {
     indentLevel--;
 }
 
-// ============================================================
 // Grammar Rules Implementation
-// ============================================================
 
 // <prog> -> program <id>; <block>
 void ParserWithCodegen::parseProgram() {
@@ -281,13 +256,12 @@ void ParserWithCodegen::parseProgram() {
     
     parseBlock();
     
-    // Generate program end code
+    // Generate program end code: OPR 0 0
     codeGen.emit(OpCode::OPR, 0, static_cast<int>(OprType::RET));
     
     if (!check(TokenType::END_OF_FILE)) {
         Token tok = currentToken();
-        reportErrorAt(tok, "unexpected token after end of program",
-                     "program should end after the main block");
+        reportErrorAt(tok, "unexpected token after end of program", "program should end after the main block");
     }
     
     parseLogExit("<program>");
@@ -318,7 +292,7 @@ void ParserWithCodegen::parseBlock() {
     // Backpatch jump address
     codeGen.backpatch(jmpAddr, codeGen.getNextAddress());
     
-    // Allocate data space
+    // Allocate data space for above procdure
     int dataSize = symbolTable.getCurrentAddress();
     codeGen.emit(OpCode::INT, 0, dataSize);
     
@@ -328,7 +302,10 @@ void ParserWithCodegen::parseBlock() {
     parseLogExit("<block>");
 }
 
+// expanded upon the original version to support the definition of negative numbers.
 // <condecl> -> const <const>{,<const>};
+// [old] <const> -> id := <integer>
+// [now] <const> -> id := [+|-]<integer>
 void ParserWithCodegen::parseCondecl() {
     parseLogEnter("<const-declaration>");
     
@@ -343,8 +320,7 @@ void ParserWithCodegen::parseCondecl() {
             // Expect ':=' for constant definition
             if (check(TokenType::EQ)) {
                 // Common mistake: using '=' instead of ':='
-                reportErrorAt(currentToken(), "use ':=' for constant definition, not '='",
-                             "PL/0 uses ':=' for both assignment and constant definition");
+                reportErrorAt(currentToken(), "use ':=' for constant definition, not '='", "PL/0 uses ':=' for both assignment and constant definition");
                 advance();  // Skip the '=' and try to continue
             } else {
                 expect(TokenType::ASSIGN, "':='");
@@ -359,13 +335,12 @@ void ParserWithCodegen::parseCondecl() {
             }
             
             if (check(TokenType::INTEGER)) {
-                int value = std::stoi(currentToken().value);
+                int value = std::stoi(currentToken().value); // transfer string to integer
                 if (negative) value = -value;
                 
                 // Check for redeclaration
                 if (symbolTable.lookupCurrent(constName)) {
-                    reportErrorAt(nameToken, "redefinition of '" + constName + "'",
-                                 "'" + constName + "' is already declared in this scope");
+                    reportErrorAt(nameToken, "redefinition of '" + constName + "'", "'" + constName + "' is already declared in this scope");
                 } else {
                     symbolTable.addSymbol(constName, SymbolType::CONST, value);
                     parseLog("Constant: " + constName + " = " + std::to_string(value));
@@ -399,8 +374,7 @@ void ParserWithCodegen::parseVardecl() {
             
             // Check for redeclaration
             if (symbolTable.lookupCurrent(varName)) {
-                reportErrorAt(nameToken, "redefinition of '" + varName + "'",
-                             "'" + varName + "' is already declared in this scope");
+                reportErrorAt(nameToken, "redefinition of '" + varName + "'","'" + varName + "' is already declared in this scope");
             } else {
                 symbolTable.addSymbol(varName, SymbolType::VAR, 0);
                 parseLog("Variable: " + varName);
@@ -455,7 +429,7 @@ void ParserWithCodegen::parseProc() {
         do {
             if (check(TokenType::IDENTIFIER)) {
                 std::string paramName = currentToken().value;
-                symbolTable.addSymbol(paramName, SymbolType::VAR, 0);
+                symbolTable.addSymbol(paramName, SymbolType::VAR, 0); // formal parameters, use 0 to occupy the place
                 parseLog("  - " + paramName);
                 advance();
             }
@@ -503,8 +477,7 @@ void ParserWithCodegen::parseBody() {
             tok.type == TokenType::READ || tok.type == TokenType::WRITE ||
             tok.type == TokenType::BEGIN) {
             // Likely missing semicolon
-            reportError("expected ';' between statements",
-                       "statements must be separated by ';'");
+            reportError("expected ';' between statements", "statements must be separated by ';'");
         } else {
             reportExpected("'end'");
         }
@@ -534,8 +507,7 @@ void ParserWithCodegen::parseStatement() {
         parseLog("Assignment to: " + varName);
         
         if (!sym) {
-            reportErrorAt(varToken, "use of undeclared identifier '" + varName + "'",
-                         "declare '" + varName + "' with 'var' before use");
+            reportErrorAt(varToken, "use of undeclared identifier '" + varName + "'", "declare '" + varName + "' with 'var' before use");
             advance();
             // Try to recover by parsing the rest
             if (check(TokenType::ASSIGN) || check(TokenType::EQ)) {
@@ -547,8 +519,7 @@ void ParserWithCodegen::parseStatement() {
         }
         
         if (sym->type == SymbolType::CONST) {
-            reportErrorAt(varToken, "cannot assign to constant '" + varName + "'",
-                         "'" + varName + "' was declared as 'const'");
+            reportErrorAt(varToken, "cannot assign to constant '" + varName + "'", "'" + varName + "' was declared as 'const'");
             advance();
             if (check(TokenType::ASSIGN) || check(TokenType::EQ)) {
                 advance();
@@ -559,8 +530,7 @@ void ParserWithCodegen::parseStatement() {
         }
         
         if (sym->type == SymbolType::PROCEDURE) {
-            reportErrorAt(varToken, "cannot assign to procedure '" + varName + "'",
-                         "did you mean 'call " + varName + "(...)'?");
+            reportErrorAt(varToken, "cannot assign to procedure '" + varName + "'", "did you mean 'call " + varName + "(...)'?");
             advance();
             if (check(TokenType::ASSIGN) || check(TokenType::EQ)) {
                 advance();
@@ -574,8 +544,7 @@ void ParserWithCodegen::parseStatement() {
         
         // Check for '=' instead of ':='
         if (check(TokenType::EQ)) {
-            reportError("use ':=' for assignment, not '='",
-                       "'=' is for comparison, ':=' is for assignment");
+            reportError("use ':=' for assignment, not '='", "'=' is for comparison, ':=' is for assignment");
             // Treat '=' as ':=' and continue
             advance();
         } else {
@@ -595,14 +564,14 @@ void ParserWithCodegen::parseStatement() {
         
         expect(TokenType::THEN, "'then'");
         
-        int jpcAddr = codeGen.emit(OpCode::JPC, 0, 0);
+        int jpcAddr = codeGen.emit(OpCode::JPC, 0, 0);  // false
         
         parseStatement();
         
         if (match(TokenType::ELSE)) {
             parseLog("ELSE clause");
-            int jmpAddr = codeGen.emit(OpCode::JMP, 0, 0);
-            codeGen.backpatch(jpcAddr, codeGen.getNextAddress());
+            int jmpAddr = codeGen.emit(OpCode::JMP, 0, 0); // true
+            codeGen.backpatch(jpcAddr, codeGen.getNextAddress()); 
             parseStatement();
             codeGen.backpatch(jmpAddr, codeGen.getNextAddress());
         } else {
@@ -636,12 +605,10 @@ void ParserWithCodegen::parseStatement() {
             parseLog("Calling: " + procName);
             
             if (!sym) {
-                reportErrorAt(procToken, "call to undeclared procedure '" + procName + "'",
-                             "declare procedure before calling it");
+                reportErrorAt(procToken, "call to undeclared procedure '" + procName + "'", "declare procedure before calling it");
             } else if (sym->type != SymbolType::PROCEDURE) {
                 std::string typeStr = (sym->type == SymbolType::CONST) ? "constant" : "variable";
-                reportErrorAt(procToken, "'" + procName + "' is a " + typeStr + ", not a procedure",
-                             "only procedures can be called");
+                reportErrorAt(procToken, "'" + procName + "' is a " + typeStr + ", not a procedure", "only procedures can be called");
             } else {
                 int levelDiff = symbolTable.getCurrentLevel() - sym->level;
                 codeGen.emit(OpCode::CAL, levelDiff, sym->address);
@@ -682,8 +649,7 @@ void ParserWithCodegen::parseStatement() {
                 if (!sym) {
                     reportErrorAt(varToken, "use of undeclared identifier '" + varName + "'");
                 } else if (sym->type == SymbolType::CONST) {
-                    reportErrorAt(varToken, "cannot read into constant '" + varName + "'",
-                                 "'" + varName + "' was declared as 'const'");
+                    reportErrorAt(varToken, "cannot read into constant '" + varName + "'", "'" + varName + "' was declared as 'const'");
                 } else if (sym->type == SymbolType::PROCEDURE) {
                     reportErrorAt(varToken, "cannot read into procedure '" + varName + "'");
                 } else {
@@ -707,7 +673,7 @@ void ParserWithCodegen::parseStatement() {
         
         do {
             parseExp();
-            codeGen.emit(OpCode::WRT, 0, 0);
+            codeGen.emit(OpCode::WRT, 0, 0); //output the top of stack
         } while (match(TokenType::COMMA));
         
         expect(TokenType::RPAREN, "')'");
@@ -717,8 +683,7 @@ void ParserWithCodegen::parseStatement() {
         if (!check(TokenType::SEMICOLON) && !check(TokenType::END) && 
             !check(TokenType::ELSE) && !check(TokenType::END_OF_FILE)) {
             Token tok = currentToken();
-            reportErrorAt(tok, "unexpected token in statement",
-                         "expected statement starting with identifier, 'if', 'while', 'call', 'begin', 'read', or 'write'");
+            reportErrorAt(tok, "unexpected token in statement", "expected statement starting with identifier, 'if', 'while', 'call', 'begin', 'read', or 'write'");
         }
     }
     
@@ -772,8 +737,7 @@ void ParserWithCodegen::parseLexp() {
                     break;
             }
         } else {
-            reportError("expected relational operator (=, <>, <, <=, >, >=)",
-                       "conditions require a comparison");
+            reportError("expected relational operator (=, <>, <, <=, >, >=)", "conditions require a comparison");
         }
     }
     
@@ -849,8 +813,7 @@ void ParserWithCodegen::parseFactor() {
         parseLog("Identifier: " + name);
         
         if (!sym) {
-            reportErrorAt(idToken, "use of undeclared identifier '" + name + "'",
-                         "declare '" + name + "' before use");
+            reportErrorAt(idToken, "use of undeclared identifier '" + name + "'", "declare '" + name + "' before use");
         } else {
             int levelDiff = symbolTable.getCurrentLevel() - sym->level;
             
@@ -859,8 +822,7 @@ void ParserWithCodegen::parseFactor() {
             } else if (sym->type == SymbolType::VAR) {
                 codeGen.emit(OpCode::LOD, levelDiff, sym->address);  // Variable address
             } else {
-                reportErrorAt(idToken, "procedure '" + name + "' cannot be used as a value",
-                             "procedures cannot appear in expressions");
+                reportErrorAt(idToken, "procedure '" + name + "' cannot be used as a value", "procedures cannot appear in expressions");
             }
         }
         
@@ -880,32 +842,28 @@ void ParserWithCodegen::parseFactor() {
     } else {
         Token tok = currentToken();
         if (tok.type == TokenType::END_OF_FILE) {
-            reportError("unexpected end of file in expression",
-                       "expression is incomplete");
+            reportError("unexpected end of file in expression", "expression is incomplete");
         } else {
-            reportErrorAt(tok, "expected expression (identifier, number, or '(')",
-                         "found '" + tok.value + "' which cannot start an expression");
+            reportErrorAt(tok, "expected expression (identifier, number, or '(')", "found '" + tok.value + "' which cannot start an expression");
         }
     }
     
     parseLogExit("<factor>");
 }
 
-// ============================================================
 // Main Parse Entry Point
-// ============================================================
 
 bool ParserWithCodegen::parse() {
     if (options.showParseTree) {
-        std::cout << "\n══════════════════════════════════════════════════════\n";
+        std::cout << "\n" << std::string(50, '=') << "\n";
         std::cout << "                    PARSE TREE\n";
-        std::cout << "══════════════════════════════════════════════════════\n\n";
+        std::cout << std::string(50, '=') << "\n\n";
     }
     
     parseProgram();
     
     if (options.showParseTree) {
-        std::cout << "\n══════════════════════════════════════════════════════\n";
+        std::cout << "\n" << std::string(50, '=') << "\n";
     }
     
     return !hasErrorFlag;
